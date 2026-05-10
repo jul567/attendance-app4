@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Attendance</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #eef2ff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 20px 14px 50px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+      padding: 24px 20px 22px;
+    }
+
+    h1 {
+      font-size: 22px;
+      color: #1a73e8;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .sub {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+
+    .student-box {
+      background: #e8f0fe;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .student-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a73e8;
+    }
+
+    .student-meta {
+      font-size: 13px;
+      color: #444;
+      margin-top: 4px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #555;
+      margin: 12px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 10px;
+      border: 1.5px solid #d5d7de;
+      font-size: 15px;
+      outline: none;
+      font-family: Arial, sans-serif;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #1a73e8;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: #1a73e8;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #1558b0;
+    }
+
+    .btn-secondary {
+      background: #f1f3f4;
+      color: #333;
+    }
+
+    .btn-danger {
+      background: #d93025;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #b3261e;
+    }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    #dashboard {
+      display: none;
+    }
+
+    .camera-wrap {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #111;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      margin-top: 6px;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0,0,0,.55);
+      color: #fff;
+      text-align: center;
+      padding: 18px;
+      transition: opacity .2s;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .pill {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .p-info { background: #e8f0fe; color: #1a73e8; }
+    .p-ok { background: #e6f4ea; color: #1e7e34; }
+    .p-warn { background: #fff8e1; color: #b06000; }
+    .p-err { background: #fce8e6; color: #c5221f; }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ececec;
+      margin: 18px 0 6px;
+    }
+
+    .actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .mini-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a73e8;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(120px);
+      background: #333;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      max-width: 92vw;
+      text-align: center;
+      transition: transform .25s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #toast.success { background: #1e7e34; }
+    #toast.error { background: #c5221f; }
+    #toast.info { background: #1a73e8; }
+
+    .logout-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .logout-modal.show {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 340px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 18px 18px;
+      text-align: center;
+    }
+
+    .modal h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .modal p {
+      font-size: 14px;
+      color: #555;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="logout-modal" id="logoutModal">
+  <div class="modal">
+    <h3>Log out?</h3>
+    <p>Do you want to close this session and return to the login screen?</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeLogout()">Cancel</button>
+      <button class="btn-danger" onclick="confirmLogout()">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+
+  <div id="loginDiv">
+    <h1>Student Attendance</h1>
+    <p class="sub">Login, capture photo, allow GPS, and mark IN / OUT attendance from your phone.</p>
+
+    <label for="rollNo">Roll Number</label>
+    <input type="text" id="rollNo" placeholder="Enter roll number" autocomplete="off">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter password">
+
+    <button class="btn-primary" id="loginBtn" onclick="login()">Login</button>
+  </div>
+
+  <div id="dashboard">
+    <div class="top-bar">
+      <div class="mini-title">📋 Attendance</div>
+      <button class="btn-danger" style="width:auto; padding:10px 12px;" onclick="openLogout()">Logout</button>
+    </div>
+
+    <div class="student-box">
+      <div class="student-name" id="studentName"></div>
+      <div class="student-meta" id="studentInfo"></div>
+    </div>
+
+    <div class="status-row">
+      <span class="pill p-info" id="attState">⏳ Checking status</span>
+      <span class="pill p-info" id="camState">⏳ Camera loading</span>
+      <span class="pill p-info" id="gpsState">⏳ GPS loading</span>
+    </div>
+
+    <label>Live Camera</label>
+    <div class="camera-wrap">
+      <video id="video" autoplay muted playsinline></video>
+      <div class="overlay" id="camOverlay">
+        <div style="font-size:34px;">📷</div>
+        <div id="camMsg">Starting camera…</div>
+      </div>
+    </div>
+
+    <button class="btn-secondary" onclick="restartCamera()">Restart Camera</button>
+
+    <hr>
+
+    <label for="remark">Remarks / Reason for absence</label>
+    <textarea id="remark" placeholder="Enter a remark if absent or any note for the day"></textarea>
+
+    <div class="actions">
+      <button class="btn-primary" id="attendanceBtn" onclick="submitAttendance()">Mark Attendance</button>
+      <button class="btn-secondary" id="remarkBtn" onclick="submitAbsenceRemark()">Submit Remark Only</button>
+    </div>
+  </div>
+</div>
+
+<iframe name="hiddenFrame" id="hiddenFrame" style="display:none;"></iframe>
+
+<script>
+var SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+
+var student = {};
+var gpsLocation = "GPS Not Available";
+var mediaStream = null;
+var cameraReady = false;
+var postPending = false;
+
+/* =========================================
+   TOAST
+========================================= */
+var toastTimer = null;
+function toast(msg, type, ms) {
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = "show " + (type || "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    el.className = "";
+  }, ms || 3000);
+}
+
+/* =========================================
+   LOGOUT
+========================================= */
+function openLogout() {
+  document.getElementById("logoutModal").classList.add("show");
+}
+
+function closeLogout() {
+  document.getElementById("logoutModal").classList.remove("show");
+}
+
+function confirmLogout() {
+  stopCamera();
+  student = {};
+  gpsLocation = "GPS Not Available";
+  cameraReady = false;
+  document.getElementById("remark").value = "";
+  document.getElementById("loginDiv").style.display = "block";
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("rollNo").value = "";
+  document.getElementById("password").value = "";
+  closeLogout();
+  toast("Logged out", "info");
+}
+
+/* =========================================
+   JSONP LOGIN / STATUS
+========================================= */
+function callGet(params) {
+  return new Promise(function (resolve, reject) {
+    var cbName = "__cb_" + Date.now() + "_" + Math.floor(Math.random() * 9999);
+    var script = document.createElement("script");
+    var timer = setTimeout(function () {
+      cleanup();
+      reject(new Error("Request timed out"));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[cbName] = function (res) {
+      cleanup();
+      resolve(res);
+    };
+
+    script.onerror = function () {
+      cleanup();
+      reject(new Error("Could not reach Apps Script"));
+    };
+
+    script.src = SCRIPT_URL + "?" + params + "&callback=" + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+/* =========================================
+   FORM POST THROUGH HIDDEN IFRAME
+========================================= */
+function callPost(payload) {
+  return new Promise(function (resolve, reject) {
+    try {
+      var form = document.createElement("form");
+      form.method = "POST";
+      form.action = SCRIPT_URL;
+      form.target = "hiddenFrame";
+
+      var input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "data";
+      input.value = JSON.stringify(payload);
+      form.appendChild(input);
+
+      document.body.appendChild(form);
+
+      postPending = true;
+      form.submit();
+
+      // Cleanup the form element
+      setTimeout(function () {
+        if (form.parentNode) form.parentNode.removeChild(form);
+        resolve({ success: true });
+      }, 500);
+
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+/* =========================================
+   LOGIN
+========================================= */
+function login() {
+  var rollNo = document.getElementById("rollNo").value.trim();
+  var password = document.getElementById("password").value.trim();
+
+  if (!rollNo || !password) {
+    toast("Enter roll number and password", "error", 4000);
+    return;
+  }
+
+  if (!SCRIPT_URL || SCRIPT_URL === "https://script.google.com/macros/s/AKfycbxOTNUtCll4mFfcpEsh0_jNBTHUR3UeO_61vOtBlt4z-vWSRBAAHy2T7rHivKdztU8R/exec") {
+    toast("Paste your Apps Script URL into the HTML first", "error", 5000);
+    return;
+  }
+
+  var btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  btn.textContent = "Logging in...";
+
+  callGet(
+    "action=login" +
+    "&rollNo=" + encodeURIComponent(rollNo) +
+    "&password=" + encodeURIComponent(password)
+  )
+  .then(function (res) {
+    btn.disabled = false;
+    btn.textContent = "Login";
+
+    if (!res.success) {
+      toast(res.message || "Login failed", "error", 5000);
+      return;
+    }
+
+    student = {
+      rollNo: rollNo,
+      password: password,
+      name: res.name,
+      course: res.course,
+      semester: res.semester
+    };
+
+    document.getElementById("loginDiv").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
+    document.getElementById("studentName").textContent = res.name;
+    document.getElementById("studentInfo").textContent =
+      res.course + " | Semester " + res.semester;
+
+    updateAttendanceState(res.nextAction, res.todayStatusMessage);
+    startCamera();
+    getGPS();
+  })
+  .catch(function (err) {
+    btn.disabled = false;
+    btn.textContent = "Login";
+    toast(err.message, "error", 6000);
+  });
+}
+
+/* =========================================
+   STATUS
+========================================= */
+function refreshStatus() {
+  if (!student.rollNo) return;
+
+  callGet(
+    "action=status" +
+    "&rollNo=" + encodeURIComponent(student.rollNo)
+  )
+  .then(function (res) {
+    if (res.success) {
+      updateAttendanceState(res.nextAction, res.todayStatusMessage);
+    }
+  })
+  .catch(function () {});
+}
+
+function updateAttendanceState(nextAction, message) {
+  var pill = document.getElementById("attState");
+  var btn = document.getElementById("attendanceBtn");
+
+  if (nextAction === "IN") {
+    pill.className = "pill p-info";
+    pill.textContent = "Next: IN";
+    btn.disabled = false;
+    btn.textContent = "Mark IN Attendance";
+  } else if (nextAction === "OUT") {
+    pill.className = "pill p-warn";
+    pill.textContent = "Next: OUT";
+    btn.disabled = false;
+    btn.textContent = "Mark OUT Attendance";
+  } else {
+    pill.className = "pill p-ok";
+    pill.textContent = "Done";
+    btn.disabled = true;
+    btn.textContent = "Attendance Completed";
+  }
+
+  if (message) {
+    toast(message, "info", 2500);
+  }
+}
+
+/* =========================================
+   CAMERA
+========================================= */
+function stopCamera() {
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(function (t) { t.stop(); });
+    mediaStream = null;
+  }
+  var video = document.getElementById("video");
+  if (video) video.srcObject = null;
+}
+
+async function startCamera() {
+  var video = document.getElementById("video");
+  var overlay = document.getElementById("camOverlay");
+  var msg = document.getElementById("camMsg");
+  var pill = document.getElementById("camState");
+
+  cameraReady = false;
+  overlay.classList.remove("hidden");
+  msg.textContent = "Starting camera…";
+  pill.className = "pill p-info";
+  pill.textContent = "⏳ Camera loading";
+
+  try {
+    stopCamera();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("Camera API not supported in this browser");
+    }
+
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    });
+
+    video.srcObject = mediaStream;
+
+    video.onloadedmetadata = function () {
+      video.play().then(function () {
+        cameraReady = true;
+        overlay.classList.add("hidden");
+        pill.className = "pill p-ok";
+        pill.textContent = "✅ Camera ready";
+      }).catch(function (err) {
+        msg.textContent = "Tap Restart Camera";
+        pill.className = "pill p-err";
+        pill.textContent = "❌ Camera blocked";
+        toast("Camera play failed: " + err.message, "error", 5000);
+      });
+    };
+
+  } catch (err) {
+    msg.textContent = "Camera error: " + err.message;
+    pill.className = "pill p-err";
+    pill.textContent = "❌ Camera error";
+    toast("Camera failed: " + err.message, "error", 6000);
+  }
+}
+
+function restartCamera() {
+  startCamera();
+}
+
+/* =========================================
+   GPS
+========================================= */
+function getGPS() {
+  var pill = document.getElementById("gpsState");
+
+  if (!navigator.geolocation) {
+    gpsLocation = "GPS Not Supported";
+    pill.className = "pill p-warn";
+    pill.textContent = "⚠️ GPS unsupported";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      gpsLocation = pos.coords.latitude + "," + pos.coords.longitude;
+      pill.className = "pill p-ok";
+      pill.textContent = "📍 GPS captured";
+    },
+    function () {
+      gpsLocation = "GPS Permission Denied";
+      pill.className = "pill p-warn";
+      pill.textContent = "⚠️ GPS denied";
+    },
+    { timeout: 12000, maximumAge: 30000 }
+  );
+}
+
+/* =========================================
+   PHOTO CAPTURE
+========================================= */
+function capturePhoto() {
+  var video = document.getElementById("video");
+
+  if (!cameraReady || video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+    toast("Camera not ready yet", "error", 4000);
+    return null;
+  }
+
+  var w = video.videoWidth;
+  var h = video.videoHeight;
+  var maxDim = 800;
+
+  if (w > maxDim || h > maxDim) {
+    var ratio = Math.min(maxDim / w, maxDim / h);
+    w = Math.round(w * ratio);
+    h = Math.round(h * ratio);
+  }
+
+  var canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+
+  var ctx = canvas.getContext("2d");
+  ctx.translate(w, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, 0, 0, w, h);
+
+  return canvas.toDataURL("image/jpeg", 0.7);
+}
+
+/* =========================================
+   ATTENDANCE SUBMISSION
+========================================= */
+function submitAttendance() {
+  if (!student.rollNo) {
+    toast("Please login first", "error", 4000);
+    return;
+  }
+
+  var photo = capturePhoto();
+  if (!photo) return;
+
+  var payload = {
+    action: "attendance",
+    rollNo: student.rollNo,
+    password: student.password,
+    name: student.name,
+    course: student.course,
+    semester: student.semester,
+    photo: photo,
+    gps: gpsLocation,
+    remark: document.getElementById("remark").value
+  };
+
+  var btn = document.getElementById("attendanceBtn");
+  btn.disabled = true;
+  btn.textContent = "Submitting...";
+
+  callPost(payload)
+    .then(function () {
+      toast("Attendance submitted", "success", 3000);
+      setTimeout(function () {
+        btn.disabled = false;
+        refreshStatus();
+      }, 1800);
+    })
+    .catch(function (err) {
+      btn.disabled = false;
+      refreshStatus();
+      toast(err.message, "error", 6000);
+    });
+}
+
+/* =========================================
+   REMARK ONLY
+========================================= */
+function submitAbsenceRemark() {
+  if (!student.rollNo) {
+    toast("Please login first", "error", 4000);
+    return;
+  }
+
+  var remark = document.getElementById("remark").value.trim();
+  if (!remark) {
+    toast("Enter a remark first", "error", 4000);
+    return;
+  }
+
+  var payload = {
+    action: "remark",
+    rollNo: student.rollNo,
+    password: student.password,
+    name: student.name,
+    course: student.course,
+    semester: student.semester,
+    remark: remark
+  };
+
+  var btn = document.getElementById("remarkBtn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  callPost(payload)
+    .then(function () {
+      toast("Remark saved", "success", 3000);
+      setTimeout(function () {
+        btn.disabled = false;
+        refreshStatus();
+      }, 1200);
+    })
+    .catch(function (err) {
+      btn.disabled = false;
+      toast(err.message, "error", 6000);
+    });
+}
+
+/* =========================================
+   IFRAME COMPLETE HOOK
+========================================= */
+document.getElementById("hiddenFrame").onload = function () {
+  if (postPending) {
+    postPending = false;
+    setTimeout(function () {
+      refreshStatus();
+    }, 1200);
+  }
+};
+
+/* =========================================
+   ENTER KEY LOGIN
+========================================= */
+document.getElementById("password").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") login();
+});
+</script>
+</body>
+</html>
